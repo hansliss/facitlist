@@ -1,0 +1,87 @@
+PRODUCT = @PRODUCT@
+VERSION = @VERSION@
+
+SHELL = /bin/sh
+top_srcdir = @top_srcdir@
+srcdir = @srcdir@
+
+.SUFFIXES:
+.SUFFIXES: .c .o
+
+CC = @CC@
+DEFINES = @DEFS@
+CFLAGS = -I. @CFLAGS@ $(DEFINES)
+LDFLAGS = @LDFLAGS@
+LIBS = @LIBS@
+INSTALL = @INSTALL@
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+bindir = @bindir@
+mandir = @mandir@
+datarootdir = @datarootdir@
+
+DISTFILES =
+
+TARGET=facitlist
+SOURCES=facitlist.c
+HEADERS=
+OBJS=facitlist.o
+LIB_OBJS=
+DISTSRC=aclocal.m4 config.h.in configure configure.in $(SOURCES) $(HEADERS) install-sh Makefile.in mkinstalldirs README
+DISTBIN=$(TARGETS) README
+
+all: $(TARGET)
+
+install: all
+	$(top_srcdir)/mkinstalldirs $(bindir)
+	$(INSTALL) $(TARGET) $(bindir)/$(TARGET)
+##	$(top_srcdir)/mkinstalldirs $(mandir)/man1
+##	$(INSTALL) $(MAN) $(mandir)/man1/$(MAN)
+
+$(TARGET): $(OBJS)
+	$(CC) $(CFLAGS) -o $(TARGET) $(OBJS) $(LDFLAGS) $(LIBS)
+
+$(OBJS): $(SOURCES)
+
+clean:
+	/bin/rm -f $(TARGET) *.o core $(PRODUCT)-$(VERSION)-*.tar.gz*
+
+distclean: clean config-clean
+
+config-clean: confclean-recursive
+
+confclean-recursive: cfg-clean
+
+cfg-clean:
+	/bin/rm -f Makefile config.h config.status config.cache config.log
+
+mostlyclean: clean
+
+maintainer-clean: clean
+
+package: all
+	tar czf $(PRODUCT)-$(VERSION)-bin.tar.gz $(DISTBIN)
+	md5sum $(PRODUCT)-$(VERSION)-bin.tar.gz > $(PRODUCT)-$(VERSION)-bin.tar.gz.md5
+	tar czf $(PRODUCT)-$(VERSION)-src.tar.gz $(DISTSRC)
+	md5sum $(PRODUCT)-$(VERSION)-src.tar.gz > $(PRODUCT)-$(VERSION)-src.tar.gz.md5
+
+# automatic re-running of configure if the configure.in file has changed
+${srcdir}/configure: configure.in 
+	cd ${srcdir} && autoconf
+
+# autoheader might not change config.h.in, so touch a stamp file
+${srcdir}/config.h.in: stamp-h.in
+${srcdir}/stamp-h.in: configure.in 
+		cd ${srcdir} && autoheader
+		echo timestamp > ${srcdir}/stamp-h.in
+
+config.h: stamp-h
+stamp-h: config.h.in config.status
+	./config.status
+Makefile: Makefile.in config.status
+	./config.status
+config.status: configure
+	./config.status --recheck
+
+
+

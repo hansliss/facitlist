@@ -21,14 +21,18 @@ void usage(char *progname)
 int main(int argc, char *argv[]) {
   char *dirname = NULL;
   FILE *infile = NULL;
+  int altfat=0;
   int o;
   unsigned char inbuf[4096], secbuf[256];
   char ofnamebuf[128];
   int i, j, k;
-  while ((o=getopt(argc, argv, "d:f:"))!=-1)
+  while ((o=getopt(argc, argv, "d:f:a"))!=-1)
     {
       switch (o)
 	{
+	case 'a':
+	  altfat = 1;
+	  break;
 	case 'd':
 	  dirname=optarg;
 	  break;
@@ -76,6 +80,9 @@ int main(int argc, char *argv[]) {
       }
       fname[k] = '\0';
       uint32_t offset = 0x20 * (((f->info & 0xFF) << 8) | ((f->info & 0xFF00) >> 8));
+      if (altfat) {
+	offset = 0x100 * (((f->info & 0xFF) << 8) | ((f->info & 0xFF00) >> 8));
+      }
       printf("%04x/%u:\t%s\n", offset, offset, fname);
       fseek(infile, offset, SEEK_SET);
       if ((n=fread(secbuf, 1, 256, infile)) != 256) {
@@ -92,7 +99,7 @@ int main(int argc, char *argv[]) {
 	if (lastval == -1) {
 	  lastval = val;
 	}
-	printf("\t%04x/%u = %04x/%u, diff=%d\n", val, val, 0x20 * val, 0x20 * val, val - lastval);
+	// printf("\t%04x/%u = %04x/%u, diff=%d\n", val, val, 0x20 * val, 0x20 * val, val - lastval);
 	lastval = val;
 	k += 2;
       }
